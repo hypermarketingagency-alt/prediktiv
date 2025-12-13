@@ -1,13 +1,3 @@
-st.set_page_config(page_title="🧠 Neuromarketing ROAS Predictor", layout="wide")
-
-# Logo hozzáadása a fejlécbe
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.image("https://raw.githubusercontent.com/hypermarketingagency-alt/prediktiv/main/logo.png", width=200)
-
-st.title("🧠 Prediktív Neuromarketing Modell")
-st.markdown("**FB/Google/TikTok ROAS optimalizálása**")
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -338,5 +328,6 @@ with st.expander("📊 Minta CSV Format"):
     **Opcionális:**
     - platform (Facebook/Google Ads/TikTok)
     """)
+
 
 
