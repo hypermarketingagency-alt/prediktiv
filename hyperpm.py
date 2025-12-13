@@ -29,9 +29,9 @@ def load_demo_data():
         'urgency_fomo': np.random.choice([0,1], n_samples, p=[0.6,0.4]),
         'visual_contrast': np.random.uniform(0.5, 1.0, n_samples),
         'personalization': np.random.uniform(0,1,n_samples),
-        'budget': np.random.uniform(100,5000,n_samples),
-        'cpc': np.random.uniform(0.5,3.0,n_samples),
-        'ctr': np.random.uniform(0.5,5.0,n_samples)/100
+        'budget': np.random.uniform(10000, 5000000, n_samples),
+        'cpc': np.random.uniform(50, 3000, n_samples),
+        'ctr': np.random.uniform(0.5, 5.0, n_samples)/100
     }
     
     neuromarketing_factor = (data['emotion_score']*0.3 + data['attention_score']*0.25 + 
@@ -151,8 +151,8 @@ with col2:
     visual = st.slider("Visual Contrast (élénk színek)", 0.0, 1.0, 0.8, 0.05)
 
 personal = st.slider("Personalizáció (név, dinamikus szöveg)", 0.0, 1.0, 0.6, 0.05)
-budget = st.number_input("Hirdetési Költségvetés (USD)", 100, 50000, 2000, 100)
-cpc = st.number_input("Várható CPC (Cost Per Click) (USD)", 0.1, 10.0, 1.2, 0.1)
+budget = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000)
+cpc = st.number_input("Várható CPC (Cost Per Click) (HUF)", 10, 1000, 300, 10)
 ctr = st.number_input("Várható CTR (Click-Through Rate) (%)", 0.1, 15.0, 2.5, 0.1)
 
 # ========== ELŐREJELZÉS ==========
@@ -184,11 +184,11 @@ if st.button("🔮 ROAS Előrejelzés & Optimalizálás", type="primary"):
     with col1:
         st.metric("💰 Várható ROAS", f"{roas_pred:.2f}x", delta=f"+{roas_pred-1:.2f}x profit")
     with col2:
-        st.metric("💵 Bevétel", f"${revenue:,.0f}", delta=f"+${profit:,.0f}")
+        st.metric("💵 Bevétel", f"{revenue:,.0f} HUF", delta=f"+{profit:,.0f} HUF")
     with col3:
         st.metric("🎯 CTR", f"{ctr:.1f}%")
     with col4:
-        st.metric("💳 CPC", f"${cpc:.2f}")
+        st.metric("💳 CPC", f"{cpc:.0f} HUF")
     
     # ========== OPTIMALIZÁLÁSI JAVASLATOK ==========
     st.markdown("---")
@@ -232,7 +232,7 @@ if st.button("🔮 ROAS Előrejelzés & Optimalizálás", type="primary"):
         recommendations.append({
             'icon': '🎨',
             'title': 'Vizuális Pop Növelése',
-            'desc': 'Élénk, kontrasztos színek, before-after képek,animációk',
+            'desc': 'Élénk, kontrasztos színek, before-after képek, animációk',
             'impact': '+0.2-0.4x ROAS'
         })
     
@@ -313,12 +313,12 @@ with st.expander("ℹ️ Hogyan működik a modell?"):
 
 with st.expander("📊 Minta CSV Format"):
     st.markdown("""
-    ```csv
+    ```
     platform,emotion_score,attention_score,social_proof,urgency_fomo,visual_contrast,personalization,budget,cpc,ctr,roas
-    Facebook,0.75,0.82,8,1,0.85,0.7,2000,1.2,0.025,5.8
-    Google Ads,0.65,0.78,5,0,0.75,0.6,1500,1.5,0.020,4.2
-    TikTok,0.85,0.88,10,1,0.9,0.8,3000,0.8,0.035,7.1
-    Facebook,0.7,0.75,8,1,0.8,0.65,2500,1.1,0.022,5.2
+    Facebook,0.75,0.82,8,1,0.85,0.7,500000,300,0.025,5.8
+    Google Ads,0.65,0.78,5,0,0.75,0.6,400000,400,0.020,4.2
+    TikTok,0.85,0.88,10,1,0.9,0.8,600000,200,0.035,7.1
+    Facebook,0.7,0.75,8,1,0.8,0.65,550000,350,0.022,5.2
     ```
     
     **Szükséges oszlopok:**
@@ -328,3 +328,4 @@ with st.expander("📊 Minta CSV Format"):
     **Opcionális:**
     - platform (Facebook/Google Ads/TikTok)
     """)
+
