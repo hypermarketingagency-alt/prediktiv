@@ -237,35 +237,35 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown(f"**Platform** {tooltip_icon('Válaszd ki a platformot (Facebook, Google Ads vagy TikTok) - különböző algoritmusok és felhasználói viselkedés')}", unsafe_allow_html=True)
+        st.markdown(f"**Platform** {tooltip_icon('Válaszd ki a platformot (Facebook, Google Ads vagy TikTok)')}", unsafe_allow_html=True)
         platform = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"], key="platform_manual", label_visibility="collapsed")
         
-        st.markdown(f"**Emotion Score** {tooltip_icon('Mennyi érzelmi trigger van az adban (0=semleges, 1=nagyon érzelmes). Boldogság, szeretet, biztonság')}", unsafe_allow_html=True)
+        st.markdown(f"**Emotion Score** {tooltip_icon('Érzelmi trigger mennyisége (0=semleges, 1=nagyon érzelmes)')}", unsafe_allow_html=True)
         emotion = st.slider("Emotion Score", 0.0, 1.0, 0.7, 0.05, key="emotion_manual", label_visibility="collapsed")
         
-        st.markdown(f"**Attention Score** {tooltip_icon('Mennyire vonz meg az ad a figyelmet (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt')}", unsafe_allow_html=True)
+        st.markdown(f"**Attention Score** {tooltip_icon('Figyelem vonzása (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt')", unsafe_allow_html=True)
         attention = st.slider("Attention Score", 0.0, 1.0, 0.8, 0.05, key="attention_manual", label_visibility="collapsed")
         
     with col2:
-        st.markdown(f"**Social Proof** {tooltip_icon('Hány elégedett vásárlót említesz meg az adban (0-20 értékelés/testimonial)')}", unsafe_allow_html=True)
+        st.markdown(f"**Social Proof** {tooltip_icon('Vélemények száma az adban (0-20 értékelés/testimonial)')", unsafe_allow_html=True)
         social_proof = st.slider("Social Proof", 0, 20, 5, key="social_proof_manual", label_visibility="collapsed")
         
-        st.markdown(f"**FOMO/Urgency** {tooltip_icon('Van-e sietség érzés az adban? (Countdown, csak ma, limitált készlet)')}", unsafe_allow_html=True)
+        st.markdown(f"**FOMO/Urgency** {tooltip_icon('Sietség érzés? (Countdown, csak ma, limitált készlet)')", unsafe_allow_html=True)
         urgency = st.checkbox("FOMO/Urgency Element", key="urgency_manual", label_visibility="collapsed")
         
-        st.markdown(f"**Visual Contrast** {tooltip_icon('Mennyire élénk a kép (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás')}", unsafe_allow_html=True)
+        st.markdown(f"**Visual Contrast** {tooltip_icon('Képek élénksége (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás')", unsafe_allow_html=True)
         visual = st.slider("Visual Contrast", 0.0, 1.0, 0.8, 0.05, key="visual_manual", label_visibility="collapsed")
     
-    st.markdown(f"**Personalizáció** {tooltip_icon('Hány személyesítési elem van (Felhasználó neve, neked, te, lokális referenciák)')}", unsafe_allow_html=True)
+    st.markdown(f"**Personalizáció** {tooltip_icon('Személyesítési elemek száma (Név, te, neked, lokális referenciák)')", unsafe_allow_html=True)
     personal = st.slider("Personalizáció", 0.0, 1.0, 0.6, 0.05, key="personal_manual", label_visibility="collapsed")
     
-    st.markdown(f"**Hirdetési Költségvetés (HUF)** {tooltip_icon('Mennyit költesz (nagyobb budget = több impresszió és potenciális vásárló)')}", unsafe_allow_html=True)
+    st.markdown(f"**Hirdetési Költségvetés (HUF)** {tooltip_icon('Mennyit költesz (nagyobb budget = több impresszió)')", unsafe_allow_html=True)
     budget = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_manual", label_visibility="collapsed")
     
-    st.markdown(f"**CPC (Cost Per Click)** {tooltip_icon('Átlagosan mennyibe kerül egy kattintás (platform és verseny függvénye)')}", unsafe_allow_html=True)
+    st.markdown(f"**CPC (Cost Per Click)** {tooltip_icon('Egy kattintás ára (platform és verseny függvénye)')", unsafe_allow_html=True)
     cpc = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_manual", label_visibility="collapsed")
     
-    st.markdown(f"**CTR (Click-Through Rate) %** {tooltip_icon('Az összes lenyomásnak mekkora % fog rákattintani (2-5% jó, 5%+ kiváló)')}", unsafe_allow_html=True)
+    st.markdown(f"**CTR (Click-Through Rate) %** {tooltip_icon('Lenyomásnak mekkora % fog rákattintani (2-5% jó, 5%+ kiváló)')", unsafe_allow_html=True)
     ctr = st.number_input("Várható CTR (%)", 0.1, 15.0, 2.5, 0.1, key="ctr_manual", label_visibility="collapsed")
 
     if st.button("🔮 ROAS Előrejelzés & Optimalizálás", type="primary", key="manual"):
@@ -318,7 +318,7 @@ with tab1:
             recommendations.append({
                 'icon': '👁️',
                 'title': 'Figyelem Növelése Az Első 3 Másodpercben',
-                'desc': 'Használj arcot, magas kontraszt, mozgás az elején',
+                'desc': 'Arcot, magas kontraszt, mozgás az elején',
                 'impact': '+0.3-0.7x ROAS'
             })
         
@@ -334,7 +334,7 @@ with tab1:
             recommendations.append({
                 'icon': '⏰',
                 'title': 'FOMO/Urgency Elem Hozzáadása',
-                'desc': 'Countdown timer, csak 3 db maradt, 48 óra akció, limited offer',
+                'desc': 'Countdown, csak db maradt, óra akció, limited offer',
                 'impact': '+0.3-0.5x ROAS'
             })
         
@@ -397,12 +397,12 @@ with tab1:
 
 with tab2:
     st.markdown("---")
-    st.subheader(f"🖼️ Hirdetés Automatikus Analízise {tooltip_icon('Töltsd fel a hirdetésed képét és szövegét - az AI automatikusan pontozza!')}", unsafe_allow_html=True)
+    st.subheader(f"🖼️ Hirdetés Automatikus Analízise {tooltip_icon('Töltsd fel a képet és szövegét - az AI automatikusan pontozza!')}", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown(f"**📸 Hirdetés Kép** {tooltip_icon('JPG/PNG kép - az AI leméri a szín kontraszt és vizuális pop-ot')}", unsafe_allow_html=True)
+        st.markdown(f"**📸 Hirdetés Kép** {tooltip_icon('JPG/PNG - az AI leméri a szín kontraszt és vizuális pop-ot')}", unsafe_allow_html=True)
         uploaded_image = st.file_uploader("Válassz képet", type=["jpg", "jpeg", "png"], key="image_analyzer", label_visibility="collapsed")
         
         if uploaded_image:
@@ -424,7 +424,7 @@ with tab2:
     
     if uploaded_image or ad_text:
         st.markdown("---")
-        st.subheader(f"🤖 Automatikus Pontozás {tooltip_icon('Az AI által automatikusan kiszámított pontok az általad feltöltött kép és szöveg alapján')}", unsafe_allow_html=True)
+        st.subheader(f"🤖 Automatikus Pontozás {tooltip_icon('Az AI által automatikusan kiszámított pontok')}", unsafe_allow_html=True)
         
         emotion_score = min(0.95, (emotion_txt * 0.7 + attention_img * 0.3))
         attention_score = min(0.95, (attention_txt * 0.6 + visual_contrast * 0.4))
@@ -455,24 +455,24 @@ with tab2:
             st.metric("⏰ FOMO/Urgency", urgency_status)
         
         st.markdown("---")
-        st.subheader(f"💡 Elemzési Javaslatok {tooltip_icon('Az AI által javasolt fejlesztések - ezek a konkrét lépések, amik segítik a ROAS-t')}", unsafe_allow_html=True)
+        st.subheader(f"💡 Elemzési Javaslatok {tooltip_icon('AI által javasolt fejlesztések')}", unsafe_allow_html=True)
         
         suggestions = []
         
         if emotion_score < 0.6:
-            suggestions.append("📈 **Érzelmi elemek**: Adj erősebb érzelmi triggereket (szeretet, közösség)")
+            suggestions.append("📈 **Érzelmi elemek**: Erősebb érzelmi triggerek (szeretet, közösség)")
         
         if attention_score < 0.7:
-            suggestions.append("👁️ **Figyelem**: Használj élénkebb szövegeket vagy nagyobb kontasztú képet")
+            suggestions.append("👁️ **Figyelem**: Élénkebb szövegek vagy nagyobb kontasztú kép")
         
         if personalization < 0.5:
-            suggestions.append("🎯 **Personalizáció**: Adj hozzá személyesítési elemeket (te, neked)")
+            suggestions.append("🎯 **Personalizáció**: Személyesítési elemek (te, neked)")
         
         if urgency_fomo == 0:
-            suggestions.append("⏰ **FOMO/Urgency**: Adj hozzá sietség-szavakat (most, hamar, korlátozott)")
+            suggestions.append("⏰ **FOMO/Urgency**: Sietség-szavakat (most, hamar, korlátozott)")
         
         if visual_contrast < 0.6:
-            suggestions.append("🎨 **Vizuális Kontraszt**: Használj élénkebb, magas kontrasztú képet")
+            suggestions.append("🎨 **Vizuális Kontraszt**: Élénkebb, magas kontrasztú kép")
         
         if suggestions:
             for sugg in suggestions:
@@ -484,15 +484,15 @@ with tab2:
         col_calc1, col_calc2, col_calc3 = st.columns(3)
         
         with col_calc1:
-            st.markdown(f"**Platform** {tooltip_icon('Melyik platformon fog futni a hirdetés?')}", unsafe_allow_html=True)
+            st.markdown(f"**Platform** {tooltip_icon('Melyik platformon?')}", unsafe_allow_html=True)
             platform_auto = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"], key="platform_analyzer", label_visibility="collapsed")
         
         with col_calc2:
-            st.markdown(f"**Budget (HUF)** {tooltip_icon('Mekkora költségvetésből dolgozunk?')}", unsafe_allow_html=True)
+            st.markdown(f"**Budget (HUF)** {tooltip_icon('Mekkora költségvetés?')}", unsafe_allow_html=True)
             budget_auto = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_analyzer", label_visibility="collapsed")
         
         with col_calc3:
-            st.markdown(f"**CPC (HUF)** {tooltip_icon('Átlagosan mennyibe kerül egy kattintás?')}", unsafe_allow_html=True)
+            st.markdown(f"**CPC (HUF)** {tooltip_icon('Egy kattintás ára?')}", unsafe_allow_html=True)
             cpc_auto = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_analyzer", label_visibility="collapsed")
         
         ctr_auto = 2.0 + (attention_score * 3)
@@ -602,22 +602,18 @@ with tab2:
             
             st.table(comparison_df)
 
-# ========== HELP & INFO ==========
 with st.expander("ℹ️ Hogyan működik a modell?"):
     st.markdown("""
     ### Random Forest Algoritmus
-    Ez a modell **100 döntési fát** használ szavazási rendszerben:
-    - Mindegyik fa más szöget lát az adatokra
-    - Szavazatot ad a ROAS-ra
-    - A végeredmény az összes fa átlaga
+    Ez a modell **100 döntési fát** használ szavazási rendszerben
     
     ### Neuromarketing Tényezők
-    - **Emotion Score**: Érzelmi engagement (0-1)
-    - **Attention Score**: Figyelem (0-1)
-    - **Social Proof**: Vélemények (0-20)
+    - **Emotion Score**: Érzelmi engagement
+    - **Attention Score**: Figyelem
+    - **Social Proof**: Vélemények
     - **FOMO/Urgency**: Sietség
-    - **Visual Contrast**: Szín (0-1)
-    - **Personalization**: Egyéniesítés (0-1)
+    - **Visual Contrast**: Szín
+    - **Personalization**: Egyéniesítés
     - **Budget**: Költségvetés
     - **CPC**: Kattintás ára
     - **CTR**: Kattintási arány
