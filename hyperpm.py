@@ -50,7 +50,6 @@ def load_custom_data(uploaded_file):
     try:
         df = pd.read_csv(uploaded_file)
         
-        # Validálás - szükséges oszlopok
         required_cols = ['emotion_score', 'attention_score', 'social_proof', 'urgency_fomo',
                         'visual_contrast', 'personalization', 'budget', 'cpc', 'ctr', 'roas']
         
@@ -61,7 +60,6 @@ def load_custom_data(uploaded_file):
             st.info(f"Szükséges oszlopok: {', '.join(required_cols)}")
             return None
         
-        # Platform kódolás
         if 'platform' in df.columns:
             df['platform_encoded'] = df['platform'].map(
                 {'Facebook': 0, 'Google Ads': 1, 'TikTok': 2}
@@ -78,7 +76,6 @@ def load_custom_data(uploaded_file):
         st.error(f"❌ Hiba a CSV betöltésekor: {str(e)}")
         return None
 
-# ========== ADATFORRÁS KIVÁLASZTÁSA ==========
 if data_source == "Demo Adatok (Alapértelmezett)":
     st.sidebar.info("📌 Demo adatok használata - ideal teszteléshez")
     df = load_demo_data()
@@ -100,7 +97,6 @@ else:
         st.warning("⚠️ Kérjük, tölts fel egy CSV fájlt!")
         st.stop()
 
-# ========== MODEL TANÍTÁS ==========
 @st.cache_resource
 def train_model(data):
     """Random Forest modell tanítása"""
@@ -121,7 +117,6 @@ def train_model(data):
 
 model, rmse, r2, features = train_model(df)
 
-# ========== MODEL STATISZTIKA ==========
 st.sidebar.markdown("---")
 st.sidebar.subheader("📈 Model Teljesítmény")
 col1, col2 = st.sidebar.columns(2)
@@ -135,7 +130,6 @@ if data_mode == "custom":
 else:
     st.sidebar.info("ℹ️ Demo adatokkal tanítva")
 
-# ========== SZÖVEGELEMZÉS FUNKCIÓK ==========
 def analyze_text(text):
     """Szövegelemzés - NLP alapú pontozás"""
     if not text:
@@ -186,7 +180,6 @@ def analyze_image(image):
         st.warning(f"⚠️ Képelemzés hiba: {str(e)}")
         return 0.6, 0.6
 
-# ========== TAB RENDSZER ==========
 tab1, tab2 = st.tabs(["📊 Manuális Előrejelzés", "🖼️ Hirdetés Analyzer"])
 
 # ==================== TAB 1: MANUÁLIS ELŐREJELZÉS ====================
@@ -195,20 +188,48 @@ with tab1:
     st.subheader("🎯 Hirdetés Paraméterei (Manuális)")
     
     col1, col2 = st.columns(2)
+    
     with col1:
-        platform = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"])
-        emotion = st.slider("Emotion Score (érzelmi engagement)", 0.0, 1.0, 0.7, 0.05)
-        attention = st.slider("Attention Score (figyelemfelkeltő)", 0.0, 1.0, 0.8, 0.05)
+        st.markdown("**Platform** ℹ️")
+        st.caption("Válaszd ki, melyik platformon fog futni az ad (Facebook, Google Ads vagy TikTok) - különböző algoritmikusok és felhasználói viselkedés")
+        platform = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"], key="platform_manual")
+        
+        st.markdown("**Emotion Score (Érzelmi Engagement)** ℹ️")
+        st.caption("Mennyi érzelmi trigger van az adban (0=semleges, 1=nagyon érzelmes). Boldogság, szeretet, biztonság, közösség")
+        emotion = st.slider("Emotion Score", 0.0, 1.0, 0.7, 0.05, key="emotion_manual")
+        
+        st.markdown("**Attention Score (Figyelem)** ℹ️")
+        st.caption("Mennyire vonz meg az ad a figyelmet (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt el mindent")
+        attention = st.slider("Attention Score", 0.0, 1.0, 0.8, 0.05, key="attention_manual")
         
     with col2:
-        social_proof = st.slider("Social Proof (testimonial/review)", 0, 20, 5)
-        urgency = st.checkbox("FOMO/Urgency Element (pl. countdown, limited stock)")
-        visual = st.slider("Visual Contrast (élénk színek)", 0.0, 1.0, 0.8, 0.05)
+        st.markdown("**Social Proof (Vélemények/Értékelések)** ℹ️")
+        st.caption("Hány elégedett vásárlót említesz meg vagy mutatsz be az adban (0-20 értékelés/testimonial)")
+        social_proof = st.slider("Social Proof", 0, 20, 5, key="social_proof_manual")
+        
+        st.markdown("**FOMO/Urgency Element** ℹ️")
+        st.caption("Van-e sietség érzés az adban? (Countdown, 'csak ma', 'limitált készlet', 'utolsó hely')")
+        urgency = st.checkbox("FOMO/Urgency Element", key="urgency_manual")
+        
+        st.markdown("**Visual Contrast (Vizuális Kontraszt)** ℹ️")
+        st.caption("Mennyire élénk és feltűnő a kép (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás")
+        visual = st.slider("Visual Contrast", 0.0, 1.0, 0.8, 0.05, key="visual_manual")
     
-    personal = st.slider("Personalizáció (név, dinamikus szöveg)", 0.0, 1.0, 0.6, 0.05)
-    budget = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000)
-    cpc = st.number_input("Várható CPC (Cost Per Click) (HUF)", 10, 1000, 300, 10)
-    ctr = st.number_input("Várható CTR (Click-Through Rate) (%)", 0.1, 15.0, 2.5, 0.1)
+    st.markdown("**Personalizáció (Egyéniesítés)** ℹ️")
+    st.caption("Hány személyesítési elem van az adban? (Felhasználó neve, 'neked', 'te', lokális referenciák)")
+    personal = st.slider("Personalizáció", 0.0, 1.0, 0.6, 0.05, key="personal_manual")
+    
+    st.markdown("**Hirdetési Költségvetés (HUF)** ℹ️")
+    st.caption("Mennyit költesz az ad megjelenítésére (nagyobb budget = több impresszió és potenciális vásárló)")
+    budget = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_manual")
+    
+    st.markdown("**Várható CPC (Cost Per Click) (HUF)** ℹ️")
+    st.caption("Átlagosan mennyibe kerül egy kattintás az adra (platform és verseny függvénye)")
+    cpc = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_manual")
+    
+    st.markdown("**Várható CTR (Click-Through Rate) (%)** ℹ️")
+    st.caption("Az összes lenyomásnak mekkora % fog rákattintani az adra (2-5% jó, 5%+ kiváló)")
+    ctr = st.number_input("Várható CTR (%)", 0.1, 15.0, 2.5, 0.1, key="ctr_manual")
     
     if st.button("🔮 ROAS Előrejelzés & Optimalizálás", type="primary", key="manual"):
         plat_enc = {"Facebook": 0, "Google Ads": 1, "TikTok": 2}[platform]
@@ -347,7 +368,8 @@ with tab2:
     
     with col1:
         st.markdown("### 📸 Hirdetés Kép")
-        uploaded_image = st.file_uploader("Válassz képet", type=["jpg", "jpeg", "png"])
+        st.caption("JPG/PNG kép - az AI letöltöltözi a szín kontraszt és vizuális pop-ot")
+        uploaded_image = st.file_uploader("Válassz képet", type=["jpg", "jpeg", "png"], key="image_analyzer")
         
         if uploaded_image:
             image_data = Image.open(uploaded_image)
@@ -358,15 +380,15 @@ with tab2:
     
     with col2:
         st.markdown("### 📝 Hirdetés Szöveg")
+        st.caption("Másold ide a hirdetés szövegét - az AI detektálja az érzelmi szavakat, sietség triggereket és személyesítést")
         ad_text = st.text_area("Másold ide a hirdetés szövegét", height=150, 
-                               placeholder="Pl: 'Csoda módon új megoldás! Csak ma 50% kedvezmény!'")
+                               placeholder="Pl: 'Csoda módon új megoldás! Csak ma 50% kedvezmény!'", key="text_analyzer")
         
         if ad_text:
             emotion_txt, attention_txt, urgency_txt, personal_txt = analyze_text(ad_text)
         else:
             emotion_txt, attention_txt, urgency_txt, personal_txt = 0.5, 0.5, 0, 0.5
     
-    # ========== AUTO-PONTOZÁS ==========
     if uploaded_image or ad_text:
         st.markdown("---")
         st.subheader("🤖 Automatikus Pontozás (Jelenlegi Hirdetés)")
@@ -425,16 +447,21 @@ with tab2:
         else:
             st.success("✅ Kiváló hirdetés! Jók az értékek!")
         
-        # ========== ROAS ELŐREJELZÉS ==========
         st.markdown("---")
         col_calc1, col_calc2, col_calc3 = st.columns(3)
         
         with col_calc1:
-            platform_auto = st.selectbox("Platform választása", ["Facebook", "Google Ads", "TikTok"], key="platform_auto")
+            st.markdown("**Platform** ℹ️")
+            st.caption("Melyik platformon fog futni a hirdetés?")
+            platform_auto = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"], key="platform_analyzer")
         with col_calc2:
-            budget_auto = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_auto")
+            st.markdown("**Hirdetési Költségvetés (HUF)** ℹ️")
+            st.caption("Mekkora költségvetésből dolgozunk?")
+            budget_auto = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_analyzer")
         with col_calc3:
-            cpc_auto = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_auto")
+            st.markdown("**Várható CPC (HUF)** ℹ️")
+            st.caption("Átlagosan mennyibe kerül egy kattintás?")
+            cpc_auto = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_analyzer")
         
         ctr_auto = 2.0 + (attention_score * 3)
         
@@ -471,7 +498,6 @@ with tab2:
             with col4:
                 st.metric("💳 CPC", f"{cpc_auto:.0f} HUF")
             
-            # ========== WHAT-IF SIMULÁCIÓ ==========
             st.markdown("---")
             st.subheader("🚀 What-If Szimuláció - Javított Hirdetés")
             st.markdown("**Ha megvalósítod az alább javasolt módosításokat, itt az várható eredmény:**")
@@ -544,7 +570,6 @@ with tab2:
             
             st.table(comparison_df)
 
-# ========== HELP & INFO ==========
 with st.expander("ℹ️ Hogyan működik a modell?"):
     st.markdown("""
     ### Random Forest Algoritmus
