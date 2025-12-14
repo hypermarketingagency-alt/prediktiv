@@ -126,7 +126,7 @@ def train_model(data):
     rmse = np.sqrt(mean_squared_error(y, y_pred))
     r2 = r2_score(y, y_pred)
     
-    return model, rmse, r2, features
+    return model, rmse, r3, features
 
 model, rmse, r2, features = train_model(df)
 
@@ -390,7 +390,7 @@ with tab2:
     # ========== AUTO-PONTOZÁS ==========
     if uploaded_image or ad_text:
         st.markdown("---")
-        st.subheader("🤖 Automatikus Pontozás")
+        st.subheader("🤖 Automatikus Pontozás (Jelenlegi Hirdetés)")
         
         # Szöveg + kép kombinálása
         emotion_score = min(0.95, (emotion_txt * 0.7 + attention_img * 0.3))
@@ -449,12 +449,19 @@ with tab2:
             st.success("✅ Kiváló hirdetés! Jók az értékek!")
         
         # ========== ROAS ELŐREJELZÉS AUTO-PONTOZÁSBÓL ==========
-        if st.button("🔮 ROAS Kalkulálás (Auto-Pontok)", type="primary", key="auto"):
+        st.markdown("---")
+        col_calc1, col_calc2, col_calc3 = st.columns(3)
+        
+        with col_calc1:
             platform_auto = st.selectbox("Platform választása", ["Facebook", "Google Ads", "TikTok"], key="platform_auto")
+        with col_calc2:
             budget_auto = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_auto")
+        with col_calc3:
             cpc_auto = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_auto")
-            ctr_auto = 2.0 + (attention_score * 3)  # Figyelem alapján CTR
-            
+        
+        ctr_auto = 2.0 + (attention_score * 3)  # Figyelem alapján CTR
+        
+        if st.button("🔮 ROAS Kalkulálás (Jelenlegi)", type="primary", key="auto"):
             plat_enc = {"Facebook": 0, "Google Ads": 1, "TikTok": 2}[platform_auto]
             
             input_data = pd.DataFrame({
@@ -470,22 +477,115 @@ with tab2:
                 'ctr': [ctr_auto / 100]
             })
             
-            roas_pred = model.predict(input_data)[0]
-            revenue = budget_auto * roas_pred
-            profit = revenue - budget_auto
+            roas_current = model.predict(input_data)[0]
+            revenue_current = budget_auto * roas_current
+            profit_current = revenue_current - budget_auto
             
             st.markdown("---")
-            st.subheader("📊 Előrejelzés Eredménye")
+            st.subheader("📊 Jelenlegi Hirdetés - Előrejelzés")
             
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("💰 Várható ROAS", f"{roas_pred:.2f}x", delta=f"+{roas_pred-1:.2f}x profit")
+                st.metric("💰 Várható ROAS", f"{roas_current:.2f}x", delta=f"+{roas_current-1:.2f}x profit")
             with col2:
-                st.metric("💵 Bevétel", f"{revenue:,.0f} HUF", delta=f"+{profit:,.0f} HUF")
+                st.metric("💵 Bevétel", f"{revenue_current:,.0f} HUF", delta=f"+{profit_current:,.0f} HUF")
             with col3:
                 st.metric("🎯 CTR", f"{ctr_auto:.1f}%")
             with col4:
                 st.metric("💳 CPC", f"{cpc_auto:.0f} HUF")
+            
+            # ========== WHAT-IF SIMULÁCIÓ ==========
+            st.markdown("---")
+            st.subheader("🚀 What-If Szimuláció - Javított Hirdetés")
+            st.markdown("**Ha megvalósítod az alább javasolt módosításokat, itt az várható eredmény:**")
+            
+            # Javasolt értékek számítása
+            emotion_improved = emotion_score
+            attention_improved = attention_score
+            urgency_improved = urgency_fomo
+            personalization_improved = personalization
+            visual_improved = visual_contrast
+            
+            # Dinamikus javítások
+            if emotion_score < 0.7:
+                emotion_improved = min(0.95, emotion_score + 0.15)
+            if attention_score < 0.8:
+                attention_improved = min(0.95, attention_score + 0.15)
+            if urgency_fomo == 0:
+                urgency_improved = 1
+            if personalization < 0.6:
+                personalization_improved = min(0.95, personalization + 0.15)
+            if visual_contrast < 0.8:
+                visual_improved = min(0.95, visual_contrast + 0.15)
+            
+            # Javított előrejelzés
+            input_data_improved = pd.DataFrame({
+                'platform_encoded': [plat_enc],
+                'emotion_score': [emotion_improved],
+                'attention_score': [attention_improved],
+                'social_proof': [social_proof_auto],
+                'urgency_fomo': [int(urgency_improved)],
+                'visual_contrast': [visual_improved],
+                'personalization': [personalization_improved],
+                'budget': [budget_auto],
+                'cpc': [cpc_auto],
+                'ctr': [ctr_auto / 100]
+            })
+            
+            roas_improved = model.predict(input_data_improved)[0]
+            revenue_improved = budget_auto * roas_improved
+            profit_improved = revenue_improved - budget_auto
+            
+            roas_delta = roas_improved - roas_current
+            revenue_delta = revenue_improved - revenue_current
+            profit_delta = profit_improved - profit_current
+            roi_improvement = ((roas_improved - roas_current) / roas_current * 100) if roas_current > 0 else 0
+            
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("💰 Javított ROAS", f"{roas_improved:.2f}x", 
+                         delta=f"+{roas_delta:.2f}x ({roi_improvement:+.1f}%)" if roas_delta != 0 else "Nem változik")
+            with col2:
+                st.metric("💵 Javított Bevétel", f"{revenue_improved:,.0f} HUF", 
+                         delta=f"+{revenue_delta:,.0f} HUF" if revenue_delta > 0 else "Nincs változás")
+            with col3:
+                st.metric("📈 Extra Profit", f"{profit_delta:,.0f} HUF", 
+                         delta="🎯 Plusz nyereség" if profit_delta > 0 else "Egyezés")
+            with col4:
+                st.metric("✨ Javítás Szintje", 
+                         f"{roi_improvement:.1f}%" if roi_improvement > 0 else "—")
+            
+            # Részletes összehasonlítás
+            st.markdown("---")
+            st.subheader("📊 Részletes Összehasonlítás")
+            
+            comparison_df = pd.DataFrame({
+                'Metrika': ['Emotion Score', 'Attention Score', 'Visual Contrast', 'Personalization', 'FOMO/Urgency'],
+                'Jelenlegi': [f"{emotion_score:.2f}", f"{attention_score:.2f}", f"{visual_contrast:.2f}", 
+                             f"{personalization:.2f}", "✅ VAN" if urgency_fomo else "❌ NINCS"],
+                'Javított': [f"{emotion_improved:.2f}", f"{attention_improved:.2f}", f"{visual_improved:.2f}", 
+                            f"{personalization_improved:.2f}", "✅ VAN"],
+                'Javulás': [f"+{emotion_improved-emotion_score:.2f}", f"+{attention_improved-attention_score:.2f}", 
+                           f"+{visual_improved-visual_contrast:.2f}", f"+{personalization_improved-personalization:.2f}", 
+                           "✅ Hozzáadva"]
+            })
+            
+            st.table(comparison_df)
+            
+            # ROI szimulációs infók
+            st.markdown("---")
+            st.subheader("💡 Alapvetően mit kell javítani?")
+            
+            if emotion_improved > emotion_score:
+                st.info(f"📈 **Érzelmi Engagement**: {emotion_score:.2f} → {emotion_improved:.2f} (+{emotion_improved-emotion_score:.2f})")
+            if attention_improved > attention_score:
+                st.info(f"👁️ **Figyelem**: {attention_score:.2f} → {attention_improved:.2f} (+{attention_improved-attention_score:.2f})")
+            if visual_improved > visual_contrast:
+                st.info(f"🎨 **Vizuális Kontraszt**: {visual_contrast:.2f} → {visual_improved:.2f} (+{visual_improved-visual_contrast:.2f})")
+            if personalization_improved > personalization:
+                st.info(f"🎯 **Personalizáció**: {personalization:.2f} → {personalization_improved:.2f} (+{personalization_improved-personalization:.2f})")
+            if urgency_improved > urgency_fomo:
+                st.success("⏰ **FOMO/Urgency**: Nincs → Van HOZZÁADVA")
 
 # ========== HELP & INFO ==========
 with st.expander("ℹ️ Hogyan működik a modell?"):
@@ -510,6 +610,7 @@ with st.expander("ℹ️ Hogyan működik a modell?"):
     ### Auto-Analyzer
     - **Szövegelemzés**: Érzelmi szavak, urgency trigger, personalizáció detectálása
     - **Képelemzés**: Szín kontraszt, méret, vizuális pop mérése
+    - **What-If Szimuláció**: Megmutatja, mennyivel javulna a ROAS a javasolt módosítások után
     """)
 
 with st.expander("📊 Minta CSV Format"):
@@ -529,3 +630,4 @@ with st.expander("📊 Minta CSV Format"):
     **Opcionális:**
     - platform (Facebook/Google Ads/TikTok)
     """)
+
