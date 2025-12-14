@@ -9,6 +9,79 @@ st.set_page_config(page_title="🧠 Neuromarketing ROAS Predictor", layout="wide
 st.title("🧠 Prediktív Neuromarketing Modell")
 st.markdown("**FB/Google/TikTok ROAS optimalizálása**")
 
+# Custom CSS für Hover Tooltip
+st.markdown("""
+<style>
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.tooltip-container .tooltip-icon {
+    font-size: 16px;
+    font-weight: bold;
+    margin-left: 4px;
+    padding: 2px 6px;
+    border-radius: 50%;
+    background-color: rgba(100, 200, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.tooltip-container .tooltip-icon:hover {
+    background-color: rgba(100, 200, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.tooltip-container .tooltip-text {
+    visibility: hidden;
+    width: 280px;
+    background-color: #1f2937;
+    color: #fff;
+    text-align: left;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    position: absolute;
+    z-index: 1000;
+    bottom: 120%;
+    left: 50%;
+    margin-left: -140px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    line-height: 1.4;
+}
+
+.tooltip-container .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #1f2937 transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+</style>
+""", unsafe_allow_html=True)
+
+def tooltip_icon(text):
+    """Hover tooltip generátor"""
+    return f"""
+    <span class="tooltip-container">
+        <span class="tooltip-icon">ℹ️</span>
+        <span class="tooltip-text">{text}</span>
+    </span>
+    """
+
 st.sidebar.header("📊 Adatforrás Kiválasztása")
 
 data_source = st.sidebar.radio(
@@ -168,45 +241,35 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("**Platform** ℹ️")
-        st.caption("Válaszd ki a platformot (Facebook, Google Ads vagy TikTok) - különböző algoritmusok és felhasználói viselkedés")
+        st.markdown(f"**Platform** {tooltip_icon('Válaszd ki a platformot (Facebook, Google Ads vagy TikTok) - különböző algoritmusok és felhasználói viselkedés')}", unsafe_allow_html=True)
         platform = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"], key="platform_manual", label_visibility="collapsed")
         
-        st.markdown("**Emotion Score (Érzelmi Engagement)** ℹ️")
-        st.caption("Mennyi érzelmi trigger van az adban (0=semleges, 1=nagyon érzelmes). Boldogság, szeretet, biztonság, közösség")
+        st.markdown(f"**Emotion Score (Érzelmi Engagement)** {tooltip_icon('Mennyi érzelmi trigger van az adban (0=semleges, 1=nagyon érzelmes). Boldogság, szeretet, biztonság, közösség')}", unsafe_allow_html=True)
         emotion = st.slider("Emotion Score", 0.0, 1.0, 0.7, 0.05, key="emotion_manual", label_visibility="collapsed")
         
-        st.markdown("**Attention Score (Figyelem)** ℹ️")
-        st.caption("Mennyire vonz meg az ad a figyelmet (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt el mindent")
+        st.markdown(f"**Attention Score (Figyelem)** {tooltip_icon('Mennyire vonz meg az ad a figyelmet (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt el mindent')}", unsafe_allow_html=True)
         attention = st.slider("Attention Score", 0.0, 1.0, 0.8, 0.05, key="attention_manual", label_visibility="collapsed")
         
     with col2:
-        st.markdown("**Social Proof (Vélemények/Értékelések)** ℹ️")
-        st.caption("Hány elégedett vásárlót említesz meg vagy mutatsz be az adban (0-20 értékelés/testimonial)")
+        st.markdown(f"**Social Proof (Vélemények/Értékelések)** {tooltip_icon('Hány elégedett vásárlót említesz meg vagy mutatsz be az adban (0-20 értékelés/testimonial)')}", unsafe_allow_html=True)
         social_proof = st.slider("Social Proof", 0, 20, 5, key="social_proof_manual", label_visibility="collapsed")
         
-        st.markdown("**FOMO/Urgency Element** ℹ️")
-        st.caption("Van-e sietség érzés az adban? (Countdown, 'csak ma', 'limitált készlet', 'utolsó hely')")
+        st.markdown(f"**FOMO/Urgency Element** {tooltip_icon('Van-e sietség érzés az adban? (Countdown, \"csak ma\", \"limitált készlet\", \"utolsó hely\")')}", unsafe_allow_html=True)
         urgency = st.checkbox("FOMO/Urgency Element", key="urgency_manual", label_visibility="collapsed")
         
-        st.markdown("**Visual Contrast (Vizuális Kontraszt)** ℹ️")
-        st.caption("Mennyire élénk és feltűnő a kép (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás")
+        st.markdown(f"**Visual Contrast (Vizuális Kontraszt)** {tooltip_icon('Mennyire élénk és feltűnő a kép (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás')}", unsafe_allow_html=True)
         visual = st.slider("Visual Contrast", 0.0, 1.0, 0.8, 0.05, key="visual_manual", label_visibility="collapsed")
     
-    st.markdown("**Personalizáció (Egyéniesítés)** ℹ️")
-    st.caption("Hány személyesítési elem van az adban? (Felhasználó neve, 'neked', 'te', lokális referenciák)")
+    st.markdown(f"**Personalizáció (Egyéniesítés)** {tooltip_icon('Hány személyesítési elem van az adban? (Felhasználó neve, \"neked\", \"te\", lokális referenciák)')}", unsafe_allow_html=True)
     personal = st.slider("Personalizáció", 0.0, 1.0, 0.6, 0.05, key="personal_manual", label_visibility="collapsed")
     
-    st.markdown("**Hirdetési Költségvetés (HUF)** ℹ️")
-    st.caption("Mennyit költesz az ad megjelenítésére (nagyobb budget = több impresszió és potenciális vásárló)")
+    st.markdown(f"**Hirdetési Költségvetés (HUF)** {tooltip_icon('Mennyit költesz az ad megjelenítésére (nagyobb budget = több impresszió és potenciális vásárló)')}", unsafe_allow_html=True)
     budget = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_manual", label_visibility="collapsed")
     
-    st.markdown("**Várható CPC (Cost Per Click) (HUF)** ℹ️")
-    st.caption("Átlagosan mennyibe kerül egy kattintás az adra (platform és verseny függvénye)")
+    st.markdown(f"**Várható CPC (Cost Per Click) (HUF)** {tooltip_icon('Átlagosan mennyibe kerül egy kattintás az adra (platform és verseny függvénye)')}", unsafe_allow_html=True)
     cpc = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_manual", label_visibility="collapsed")
     
-    st.markdown("**Várható CTR (Click-Through Rate) (%)** ℹ️")
-    st.caption("Az összes lenyomásnak mekkora % fog rákattintani az adra (2-5% jó, 5%+ kiváló)")
+    st.markdown(f"**Várható CTR (Click-Through Rate) (%)** {tooltip_icon('Az összes lenyomásnak mekkora % fog rákattintani az adra (2-5% jó, 5%+ kiváló)')}", unsafe_allow_html=True)
     ctr = st.number_input("Várható CTR (%)", 0.1, 15.0, 2.5, 0.1, key="ctr_manual", label_visibility="collapsed")
 
     if st.button("🔮 ROAS Előrejelzés & Optimalizálás", type="primary", key="manual"):
@@ -344,8 +407,7 @@ with tab2:
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("**📸 Hirdetés Kép** ℹ️")
-        st.caption("JPG/PNG kép - az AI leméri a szín kontraszt és vizuális pop-ot")
+        st.markdown(f"**📸 Hirdetés Kép** {tooltip_icon('JPG/PNG kép - az AI leméri a szín kontraszt és vizuális pop-ot')}", unsafe_allow_html=True)
         uploaded_image = st.file_uploader("Válassz képet", type=["jpg", "jpeg", "png"], key="image_analyzer", label_visibility="collapsed")
         
         if uploaded_image:
@@ -356,8 +418,7 @@ with tab2:
             visual_contrast, attention_img = 0.6, 0.6
     
     with col2:
-        st.markdown("**📝 Hirdetés Szöveg** ℹ️")
-        st.caption("Az AI detektálja az érzelmi szavakat, sietség triggereket és személyesítést")
+        st.markdown(f"**📝 Hirdetés Szöveg** {tooltip_icon('Az AI detektálja az érzelmi szavakat, sietség triggereket és személyesítést')}", unsafe_allow_html=True)
         ad_text = st.text_area("Másold ide a hirdetés szövegét", height=150, 
                                placeholder="Pl: 'Csoda módon új megoldás! Csak ma 50% kedvezmény!'", key="text_analyzer", label_visibility="collapsed")
         
@@ -428,18 +489,15 @@ with tab2:
         col_calc1, col_calc2, col_calc3 = st.columns(3)
         
         with col_calc1:
-            st.markdown("**Platform** ℹ️")
-            st.caption("Melyik platformon fog futni a hirdetés?")
+            st.markdown(f"**Platform** {tooltip_icon('Melyik platformon fog futni a hirdetés?')}", unsafe_allow_html=True)
             platform_auto = st.selectbox("Platform", ["Facebook", "Google Ads", "TikTok"], key="platform_analyzer", label_visibility="collapsed")
         
         with col_calc2:
-            st.markdown("**Hirdetési Költségvetés (HUF)** ℹ️")
-            st.caption("Mekkora költségvetésből dolgozunk?")
+            st.markdown(f"**Hirdetési Költségvetés (HUF)** {tooltip_icon('Mekkora költségvetésből dolgozunk?')}", unsafe_allow_html=True)
             budget_auto = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_analyzer", label_visibility="collapsed")
         
         with col_calc3:
-            st.markdown("**Várható CPC (HUF)** ℹ️")
-            st.caption("Átlagosan mennyibe kerül egy kattintás?")
+            st.markdown(f"**Várható CPC (HUF)** {tooltip_icon('Átlagosan mennyibe kerül egy kattintás?')}", unsafe_allow_html=True)
             cpc_auto = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_analyzer", label_visibility="collapsed")
         
         ctr_auto = 2.0 + (attention_score * 3)
