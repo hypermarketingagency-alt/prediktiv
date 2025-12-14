@@ -243,29 +243,29 @@ with tab1:
         st.markdown(f"**Emotion Score** {tooltip_icon('Érzelmi trigger mennyisége (0=semleges, 1=nagyon érzelmes)')}", unsafe_allow_html=True)
         emotion = st.slider("Emotion Score", 0.0, 1.0, 0.7, 0.05, key="emotion_manual", label_visibility="collapsed")
         
-        st.markdown(f"**Attention Score** {tooltip_icon('Figyelem vonzása (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt')", unsafe_allow_html=True)
+        st.markdown(f"**Attention Score** {tooltip_icon('Figyelem vonzása (0=sárgaság, 1=szuperhatásos). Az első 3 másodperc dönt')}", unsafe_allow_html=True)
         attention = st.slider("Attention Score", 0.0, 1.0, 0.8, 0.05, key="attention_manual", label_visibility="collapsed")
         
     with col2:
-        st.markdown(f"**Social Proof** {tooltip_icon('Vélemények száma az adban (0-20 értékelés/testimonial)')", unsafe_allow_html=True)
+        st.markdown(f"**Social Proof** {tooltip_icon('Vélemények száma az adban (0-20 értékelés/testimonial)')}", unsafe_allow_html=True)
         social_proof = st.slider("Social Proof", 0, 20, 5, key="social_proof_manual", label_visibility="collapsed")
         
-        st.markdown(f"**FOMO/Urgency** {tooltip_icon('Sietség érzés? (Countdown, csak ma, limitált készlet)')", unsafe_allow_html=True)
+        st.markdown(f"**FOMO/Urgency** {tooltip_icon('Sietség érzés az adban (Countdown, csak ma, limitált készlet)')}", unsafe_allow_html=True)
         urgency = st.checkbox("FOMO/Urgency Element", key="urgency_manual", label_visibility="collapsed")
         
-        st.markdown(f"**Visual Contrast** {tooltip_icon('Képek élénksége (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás')", unsafe_allow_html=True)
+        st.markdown(f"**Visual Contrast** {tooltip_icon('Képek élénksége (0=unalmas, 1=nagyon kontraszt). Magas kontraszt = több kattintás')}", unsafe_allow_html=True)
         visual = st.slider("Visual Contrast", 0.0, 1.0, 0.8, 0.05, key="visual_manual", label_visibility="collapsed")
     
-    st.markdown(f"**Personalizáció** {tooltip_icon('Személyesítési elemek száma (Név, te, neked, lokális referenciák)')", unsafe_allow_html=True)
+    st.markdown(f"**Personalizáció** {tooltip_icon('Személyesítési elemek száma (Név, te, neked, lokális referenciák)')}", unsafe_allow_html=True)
     personal = st.slider("Personalizáció", 0.0, 1.0, 0.6, 0.05, key="personal_manual", label_visibility="collapsed")
     
-    st.markdown(f"**Hirdetési Költségvetés (HUF)** {tooltip_icon('Mennyit költesz (nagyobb budget = több impresszió)')", unsafe_allow_html=True)
+    st.markdown(f"**Hirdetési Költségvetés (HUF)** {tooltip_icon('Mennyit költesz (nagyobb budget = több impresszió)')}", unsafe_allow_html=True)
     budget = st.number_input("Hirdetési Költségvetés (HUF)", 10000, 5000000, 500000, 10000, key="budget_manual", label_visibility="collapsed")
     
-    st.markdown(f"**CPC (Cost Per Click)** {tooltip_icon('Egy kattintás ára (platform és verseny függvénye)')", unsafe_allow_html=True)
+    st.markdown(f"**CPC (Cost Per Click)** {tooltip_icon('Egy kattintás ára (platform és verseny függvénye)')}", unsafe_allow_html=True)
     cpc = st.number_input("Várható CPC (HUF)", 10, 1000, 300, 10, key="cpc_manual", label_visibility="collapsed")
     
-    st.markdown(f"**CTR (Click-Through Rate) %** {tooltip_icon('Lenyomásnak mekkora % fog rákattintani (2-5% jó, 5%+ kiváló)')", unsafe_allow_html=True)
+    st.markdown(f"**CTR (Click-Through Rate) %** {tooltip_icon('Lenyomásnak mekkora % fog rákattintani (2-5% jó, 5%+ kiváló)')}", unsafe_allow_html=True)
     ctr = st.number_input("Várható CTR (%)", 0.1, 15.0, 2.5, 0.1, key="ctr_manual", label_visibility="collapsed")
 
     if st.button("🔮 ROAS Előrejelzés & Optimalizálás", type="primary", key="manual"):
@@ -326,7 +326,7 @@ with tab1:
             recommendations.append({
                 'icon': '👍',
                 'title': 'Social Proof Maximalizálása',
-                'desc': 'Testimonial videók, 4.8⭐ értékelések, elégedett ügyfél badgek',
+                'desc': 'Testimonial videók, 4.8 csillag értékelések, elégedett ügyfél badgek',
                 'impact': '+0.4-0.6x ROAS'
             })
         
