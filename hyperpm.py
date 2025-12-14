@@ -628,4 +628,3 @@ with st.expander("📊 Minta CSV Format"):
     TikTok,0.85,0.88,10,1,0.9,0.8,3000,0.8,0.035,7.1
     ```
     """)
-
