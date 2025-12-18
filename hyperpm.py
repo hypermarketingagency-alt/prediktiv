@@ -12,7 +12,7 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.2
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.3
 # FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
@@ -43,7 +43,8 @@ UNIFIED_SCHEMA = {
         ("clicks", "int", "Kattintások / Interakciók"),
         ("ctr_percent", "float", "CTR (%)"),
         ("cpc", "float", "CPC (HUF)"),
-        ("cpa", "float", "CPA (HUF)"),
+        ("cpa", "float", "CPA (HUF, számított)"),
+        ("conv_cost", "float", "Konverziós költség (HUF, riportból)"),
         ("roas", "float", "ROAS (x)"),
         ("reach", "int", "Elérés"),
         ("frequency", "float", "Gyakoriság"),
@@ -60,7 +61,6 @@ UNIFIED_SCHEMA = {
     ],
 }
 
-# Fuzzy minták – kampány név és státusz szétválasztva
 COLUMN_PATTERNS = {
     "spend": ["elköltött összeg", "költség", "spend", "amount spent"],
     "campaign_name": ["kampány neve", "campaign", "campaign name"],
@@ -80,7 +80,10 @@ COLUMN_PATTERNS = {
     "clicks": ["kattintás", "clicks", "link click", "interakció"],
     "ctr_percent": ["ctr", "átkattintási arány"],
     "cpc": ["cpc", "cost per click", "kattintási költség", "cpc (összes)"],
-    "cpa": ["eredményenkénti költség", "cpa", "költség/konv", "cost per conversion"],
+    # riport szerinti konverziós költség
+    "conv_cost": ["eredményenkénti költség", "cost per result", "cost/result"],
+    # számított CPA
+    "cpa": ["cpa", "költség/konv", "cost per conversion"],
     "roas": ["vásárlási hirdetésmegtérülés", "roas", "hirdetésmegtérülés"],
     "reach": ["elérés", "reach"],
     "frequency": ["gyakoriság", "frequency"],
@@ -119,19 +122,15 @@ def intelligently_map_columns(df_columns):
 
 
 def parse_numeric_value(val):
-    """Magyar formátum: szóköz ezres, vessző tizedes, esetleg pont is."""
     if pd.isna(val) or val == "" or val == "–" or val == "--":
         return np.nan
     if isinstance(val, (int, float)):
         return float(val)
     s = str(val).strip()
-    # Ezres elválasztókat töröljük (szóköz és non‑breaking space)
     s = s.replace("\u00a0", "").replace(" ", "")
-    # Ha van mind pont, mind vessző: tipikusan 1.234,56 → 1234.56
     if "," in s and "." in s:
         s = s.replace(".", "").replace(",", ".")
     else:
-        # Ha csak vessző van, az tizedes
         s = s.replace(",", ".")
     try:
         return float(s)
@@ -140,7 +139,6 @@ def parse_numeric_value(val):
 
 
 def parse_percentage_value(val):
-    """Százalék → float %-ban (pl. 5.25), nem 0.0525."""
     if pd.isna(val) or val == "" or val == "–":
         return np.nan
     s = str(val).strip().replace("%", "")
@@ -216,15 +214,12 @@ def normalize_data(df, mapping, user_adjustments=None, platform_hint=None):
         else:
             normalized_df[field_name] = raw_data
 
-    # Ha nincs date_end, töltsük fel a date_starttal
     if "date_start" in normalized_df.columns and "date_end" not in normalized_df.columns:
         normalized_df["date_end"] = normalized_df["date_start"]
 
-    # Platform automatikus beállítás
     if "platform" not in normalized_df.columns:
         normalized_df["platform"] = platform_hint if platform_hint else "Unknown"
 
-    # Számolt metrikák
     if "spend" in normalized_df.columns and "conversion_value" in normalized_df.columns:
         if "roas" not in normalized_df.columns:
             normalized_df["roas"] = normalized_df["conversion_value"] / normalized_df["spend"]
@@ -454,22 +449,21 @@ with tab3:
 
             st.subheader("Adatok Táblázat")
             df_display = df.copy()
-            if "cpc" in df_display.columns:
-                df_display.rename(columns={"cpc": "cpc (HUF)"}, inplace=True)
-            if "cpa" in df_display.columns:
-                df_display.rename(columns={"cpa": "cpa (HUF)"}, inplace=True)
+            rename_map = {}
             if "spend" in df_display.columns:
-                df_display.rename(columns={"spend": "spend (HUF)"}, inplace=True)
+                rename_map["spend"] = "spend (HUF)"
             if "conversion_value" in df_display.columns:
-                df_display.rename(
-                    columns={"conversion_value": "conversion_value (HUF)"},
-                    inplace=True,
-                )
+                rename_map["conversion_value"] = "conversion_value (HUF)"
+            if "cpc" in df_display.columns:
+                rename_map["cpc"] = "cpc (HUF)"
+            if "cpa" in df_display.columns:
+                rename_map["cpa"] = "cpa (HUF, számított)"
+            if "conv_cost" in df_display.columns:
+                rename_map["conv_cost"] = "conv_cost (HUF, riport)"
             if "ctr_percent" in df_display.columns:
-                df_display.rename(
-                    columns={"ctr_percent": "ctr_percent (%)"}, inplace=True
-                )
+                rename_map["ctr_percent"] = "ctr_percent (%)"
 
+            df_display.rename(columns=rename_map, inplace=True)
             st.dataframe(df_display, use_container_width=True)
         except Exception as e:
             st.error(f"❌ Hiba az előnézet során: {str(e)}")
@@ -509,7 +503,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.2** | Neuromarketing ROAS Predictor  
+**HYPER App v3.3** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
