@@ -12,7 +12,7 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.7
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.8
 # FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ============================================================================
-# 📊 CONFIGURATION & MAPPINGS (Excel alapján)
+# 📊 CONFIGURATION & MAPPINGS
 # ============================================================================
 
 UNIFIED_SCHEMA = {
@@ -61,66 +61,28 @@ UNIFIED_SCHEMA = {
     ],
 }
 
-# Excel: CSV Oszlop → Unified Field + javasolt paraméterek[file:39]
+# FONTOS: „Eredmény jelzése” szándékosan NINCS benne, hogy sehol ne legyen felismerve.
 COLUMN_PATTERNS = {
-    # 0  | CPC (összes) (HUF)                     | cpc                     |
     "cpc": ["cpc (összes)", "cpc (összes) (huf)", "cpc", "cost per click"],
-
-    # 1  | CTR (átkattintási arány)              | clicks | ctr            |
-    # Itt a unified field valójában CTR → ctr_percent, a belső paraméter a "ctr"
     "ctr_percent": ["ctr (átkattintási arány)", "ctr", "átkattintási arány"],
-
-    # 2  | Elköltött összeg (HUF)                | spend   | all_spend      |
     "spend": ["elköltött összeg (huf)", "elköltött összeg", "spend", "amount spent"],
-
-    # 3  | Elérés                                | reach                   |
     "reach": ["elérés", "reach"],
-
-    # 4  | Eredmény jelzése                      | conv_cost | (nem kell)   |
-    # Nem használjuk normalizáláshoz, ezért nem adunk neki unified fieldet.
-
-    # 5  | Eredmények                            | conv_cost | results      |
-    # Itt a unified field "results" (darabszám), a paraméter "results".
-    "results": ["eredmények", "results"],
-
-    # 6  | Eredményenkénti költség               | spend    | cost_per_result
-    # Valójában konverziós költség → conv_cost.
+    # „Eredmény jelzése” direkt kimarad, így nem lesz unified fieldje.
+    "results": ["eredmények"],  # csak az „Eredmények” oszlopot mappeli ide
     "conv_cost": ["eredményenkénti költség", "cost per result"],
-
-    # 7  | Gyakoriság                            | frequency              |
     "frequency": ["gyakoriság", "frequency"],
-
-    # 8  | Hirdetéssorozat költségkerete         | spend    | adset_cost   |
     "adset_budget": ["hirdetéssorozat költségkerete", "adset budget"],
-
-    # 9  | Hirdetéssorozat költségkeretének típusa | spend |               |
     "adset_budget_type": ["hirdetéssorozat költségkeretének típusa", "budget type"],
-
-    # 10 | Jelentés kezdete                      | date_start             |
     "date_start": ["jelentés kezdete", "report start", "start date"],
-
-    # 11 | Jelentés vége                         | date_end               |
-    # 21 | Vége                                  | date_end               |
     "date_end": ["jelentés vége", "vége", "report end", "end date"],
-
-    # 12 | Kampány neve                          | campaign_name          |
     "campaign_name": ["kampány neve", "campaign name", "campaign"],
-
-    # 13 | Kampány teljesítése                   | campaign_status        |
     "campaign_status": ["kampány teljesítése", "status", "állapot"],
-
-    # 14 | Kosárba helyezés egységnyi költsége (HUF) | spend | cost_per_addtocart
     "cost_per_addtocart": [
         "kosárba helyezés egységnyi költsége",
         "kosárba helyezés egységnyi költsége (huf)",
         "cost per add to cart",
     ],
-
-    # 15 | Kosárba helyezések                    | add_to_cart           |
     "add_to_cart": ["kosárba helyezések", "add to cart"],
-
-    # 16 | Kosárba helyezések konverziós értéke  | conversion_value | addtocart_value
-    # Ez is konverziós érték, de add_to_cart típushoz; alap unified field: conversion_value.
     "conversion_value": [
         "kosárba helyezések konverziós értéke",
         "vásárlások konverziós értéke",
@@ -128,21 +90,9 @@ COLUMN_PATTERNS = {
         "conversion value",
         "bevétel",
     ],
-
-    # 17 | Megjelenések                          | impressions           |
     "impressions": ["megjelenések", "impressions"],
-
-    # 18 | Vásárlási hirdetésmegtérülés (ROAS)   | roas                  |
     "roas": ["vásárlási hirdetésmegtérülés", "roas", "hirdetésmegtérülés"],
-
-    # 19 | Vásárlások                            | conversions | purchase  |
     "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
-
-    # 20 | Vásárlások konverziós értéke          | conversions | purchase_value
-    # Itt az Excelben unified field hibás volt; itt is conversion_value‑nak feleltetjük meg.
-    # (Már bent van a conversion_value listában.)
-    # 21 | Vége                                  | date_end              |
-    # -> date_end listában már szerepel.
 }
 
 # ============================================================================
@@ -586,7 +536,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.7** | Neuromarketing ROAS Predictor  
+**HYPER App v3.8** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
