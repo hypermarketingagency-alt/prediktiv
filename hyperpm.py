@@ -12,7 +12,7 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.3
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.4
 # FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
@@ -56,7 +56,6 @@ UNIFIED_SCHEMA = {
         ("add_to_cart", "int", "Kosárba helyezések"),
         ("video_views", "int", "Videó megtekintések"),
         ("engagement", "int", "Engagement"),
-        ("conversion_type", "string", "Konverzió típusa"),
         ("notes", "string", "Megjegyzések"),
     ],
 }
@@ -67,7 +66,7 @@ COLUMN_PATTERNS = {
     "campaign_status": ["kampány teljesítése", "állapot", "status", "state", "active", "completed"],
     "date_start": ["jelentés kezdete", "start date", "from"],
     "date_end": ["jelentés vége", "end date", "to"],
-    "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
+    "conversions": ["vásárlások", "konverziók", "purchases", "orders", "eredmények"],
     "conversion_value": [
         "vásárlások konverziós értéke",
         "konverziós érték",
@@ -459,7 +458,7 @@ with tab3:
             if "cpa" in df_display.columns:
                 rename_map["cpa"] = "cpa (HUF, számított)"
             if "conv_cost" in df_display.columns:
-                rename_map["conv_cost"] = "conv_cost (HUF, riport)"
+                rename_map["conv_cost"] = "conv_cost (HUF)"
             if "ctr_percent" in df_display.columns:
                 rename_map["ctr_percent"] = "ctr_percent (%)"
 
@@ -503,7 +502,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.3** | Neuromarketing ROAS Predictor  
+**HYPER App v3.4** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
