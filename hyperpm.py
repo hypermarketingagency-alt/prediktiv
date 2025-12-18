@@ -12,7 +12,7 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.4
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.6
 # FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
@@ -44,7 +44,7 @@ UNIFIED_SCHEMA = {
         ("ctr_percent", "float", "CTR (%)"),
         ("cpc", "float", "CPC (HUF)"),
         ("cpa", "float", "CPA (HUF, számított)"),
-        ("conv_cost", "float", "Konverziós költség (HUF, riportból)"),
+        ("conv_cost", "float", "Konverziós költség (HUF)"),
         ("roas", "float", "ROAS (x)"),
         ("reach", "int", "Elérés"),
         ("frequency", "float", "Gyakoriság"),
@@ -66,7 +66,8 @@ COLUMN_PATTERNS = {
     "campaign_status": ["kampány teljesítése", "állapot", "status", "state", "active", "completed"],
     "date_start": ["jelentés kezdete", "start date", "from"],
     "date_end": ["jelentés vége", "end date", "to"],
-    "conversions": ["vásárlások", "konverziók", "purchases", "orders", "eredmények"],
+    # konverzió darab: FB „Vásárlások”, GA „Konverziók”
+    "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
     "conversion_value": [
         "vásárlások konverziós értéke",
         "konverziós érték",
@@ -76,12 +77,11 @@ COLUMN_PATTERNS = {
         "bevétel",
     ],
     "impressions": ["megjelenések", "impressions"],
-    "clicks": ["kattintás", "clicks", "link click", "interakció"],
+    # kattintások: FB „Link click”/„Clicks”, GA „Interakciók”
+    "clicks": ["link click", "clicks", "kattintás", "interakciók", "interakció"],
     "ctr_percent": ["ctr", "átkattintási arány"],
     "cpc": ["cpc", "cost per click", "kattintási költség", "cpc (összes)"],
-    # riport szerinti konverziós költség
     "conv_cost": ["eredményenkénti költség", "cost per result", "cost/result"],
-    # számított CPA
     "cpa": ["cpa", "költség/konv", "cost per conversion"],
     "roas": ["vásárlási hirdetésmegtérülés", "roas", "hirdetésmegtérülés"],
     "reach": ["elérés", "reach"],
@@ -446,23 +446,53 @@ with tab3:
                 if "roas" in df.columns:
                     st.metric("📈 Átlag ROAS (x)", f"{df['roas'].mean():.2f}")
 
+            # --- FORMÁZOTT TÁBLA ---
             st.subheader("Adatok Táblázat")
             df_display = df.copy()
-            rename_map = {}
-            if "spend" in df_display.columns:
-                rename_map["spend"] = "spend (HUF)"
-            if "conversion_value" in df_display.columns:
-                rename_map["conversion_value"] = "conversion_value (HUF)"
-            if "cpc" in df_display.columns:
-                rename_map["cpc"] = "cpc (HUF)"
-            if "cpa" in df_display.columns:
-                rename_map["cpa"] = "cpa (HUF, számított)"
-            if "conv_cost" in df_display.columns:
-                rename_map["conv_cost"] = "conv_cost (HUF)"
-            if "ctr_percent" in df_display.columns:
-                rename_map["ctr_percent"] = "ctr_percent (%)"
 
-            df_display.rename(columns=rename_map, inplace=True)
+            def fmt_int(x):
+                if pd.isna(x):
+                    return ""
+                return f"{int(round(x)):,}".replace(",", " ")
+
+            def fmt_huf(x):
+                if pd.isna(x):
+                    return ""
+                return f"{int(round(x)):,}".replace(",", " ")
+
+            def fmt_ctr(x):
+                if pd.isna(x):
+                    return ""
+                return f"{x:.2f}".replace(".", ",") + "%"
+
+            # conversions, impressions, clicks, reach, add_to_cart, frequency -> egész
+            for col in ["conversions", "impressions", "clicks", "add_to_cart", "reach"]:
+                if col in df_display.columns:
+                    df_display[col] = df_display[col].apply(fmt_int)
+
+            if "frequency" in df_display.columns:
+                df_display["frequency"] = df_display["frequency"].apply(
+                    lambda x: "" if pd.isna(x) else f"{x:.4f}"
+                )
+
+            # HUF mezők
+            huf_cols = {
+                "spend": "spend (HUF)",
+                "conversion_value": "conversion_value (HUF)",
+                "cpc": "cpc (HUF)",
+                "cpa": "cpa (HUF, számított)",
+                "conv_cost": "conv_cost (HUF)",
+            }
+            for src, dst in huf_cols.items():
+                if src in df_display.columns:
+                    df_display[dst] = df_display[src].apply(fmt_huf)
+                    del df_display[src]
+
+            # CTR (%)
+            if "ctr_percent" in df_display.columns:
+                df_display["ctr_percent (%)"] = df_display["ctr_percent"].apply(fmt_ctr)
+                del df_display["ctr_percent"]
+
             st.dataframe(df_display, use_container_width=True)
         except Exception as e:
             st.error(f"❌ Hiba az előnézet során: {str(e)}")
@@ -502,7 +532,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.4** | Neuromarketing ROAS Predictor  
+**HYPER App v3.6** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
