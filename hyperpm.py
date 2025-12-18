@@ -12,7 +12,7 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.8
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.9
 # FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ============================================================================
-# 📊 CONFIGURATION & MAPPINGS
+# 📊 CONFIG & SCHEMA
 # ============================================================================
 
 UNIFIED_SCHEMA = {
@@ -61,45 +61,42 @@ UNIFIED_SCHEMA = {
     ],
 }
 
-# FONTOS: „Eredmény jelzése” szándékosan NINCS benne, hogy sehol ne legyen felismerve.
+# FONTOS: „Eredmény jelzése” NINCS a mintákban → nem lesz felismerve.
 COLUMN_PATTERNS = {
-    "cpc": ["cpc (összes)", "cpc (összes) (huf)", "cpc", "cost per click"],
-    "ctr_percent": ["ctr (átkattintási arány)", "ctr", "átkattintási arány"],
-    "spend": ["elköltött összeg (huf)", "elköltött összeg", "spend", "amount spent"],
-    "reach": ["elérés", "reach"],
-    # „Eredmény jelzése” direkt kimarad, így nem lesz unified fieldje.
-    "results": ["eredmények"],  # csak az „Eredmények” oszlopot mappeli ide
+    "cpc": ["cpc (összes) (huf)", "cpc (összes)", "cpc"],
+    "ctr_percent": ["ctr (átkattintási arány)", "ctr"],
+    "spend": ["elköltött összeg (huf)", "elköltött összeg", "spend"],
+    "reach": ["elérés"],
+    # Eredmények: csak az a sor, aminek a neve PONTOSAN „Eredmények”
+    "results": ["eredmények"],
     "conv_cost": ["eredményenkénti költség", "cost per result"],
-    "frequency": ["gyakoriság", "frequency"],
-    "adset_budget": ["hirdetéssorozat költségkerete", "adset budget"],
-    "adset_budget_type": ["hirdetéssorozat költségkeretének típusa", "budget type"],
-    "date_start": ["jelentés kezdete", "report start", "start date"],
-    "date_end": ["jelentés vége", "vége", "report end", "end date"],
-    "campaign_name": ["kampány neve", "campaign name", "campaign"],
-    "campaign_status": ["kampány teljesítése", "status", "állapot"],
-    "cost_per_addtocart": [
-        "kosárba helyezés egységnyi költsége",
-        "kosárba helyezés egységnyi költsége (huf)",
-        "cost per add to cart",
-    ],
-    "add_to_cart": ["kosárba helyezések", "add to cart"],
+    "frequency": ["gyakoriság"],
+    "adset_budget": ["hirdetéssorozat költségkerete"],
+    "adset_budget_type": ["hirdetéssorozat költségkeretének típusa"],
+    "date_start": ["jelentés kezdete"],
+    "date_end": ["jelentés vége", "vége"],
+    "campaign_name": ["kampány neve"],
+    "campaign_status": ["kampány teljesítése"],
+    "cost_per_addtocart": ["kosárba helyezés egységnyi költsége"],
+    "add_to_cart": ["kosárba helyezések"],
     "conversion_value": [
-        "kosárba helyezések konverziós értéke",
         "vásárlások konverziós értéke",
-        "purchase value",
-        "conversion value",
-        "bevétel",
+        "kosárba helyezések konverziós értéke",
     ],
-    "impressions": ["megjelenések", "impressions"],
-    "roas": ["vásárlási hirdetésmegtérülés", "roas", "hirdetésmegtérülés"],
+    "impressions": ["megjelenések"],
+    "roas": ["vásárlási hirdetésmegtérülés"],
+    # conversions: csak „Vásárlások”/„Konverziók” típusú oszlopokra ül rá,
+    # nem fog ráülni a „Vásárlások konverziós értéke” oszlopra.
     "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
+    "clicks": ["link click", "clicks", "kattintás", "kattintások"],
 }
 
 # ============================================================================
-# 🔧 HELPER FUNCTIONS
+# 🔧 HELPERS
 # ============================================================================
 
-def find_matching_column(csv_column, patterns_dict, threshold=70):
+def find_matching_column(csv_column, patterns_dict, threshold=80):
+    """Szándékosan magasabb threshold, hogy ne keverje össze „Eredmény jelzése” vs „Eredmények”."""
     csv_col_lower = csv_column.lower().strip()
     best_match = None
     best_score = 0
@@ -536,7 +533,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.8** | Neuromarketing ROAS Predictor  
+**HYPER App v3.9** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
