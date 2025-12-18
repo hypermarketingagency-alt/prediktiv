@@ -12,7 +12,7 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.6
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.7
 # FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 # ============================================================================
-# 📊 CONFIGURATION & MAPPINGS
+# 📊 CONFIGURATION & MAPPINGS (Excel alapján)
 # ============================================================================
 
 UNIFIED_SCHEMA = {
@@ -48,45 +48,101 @@ UNIFIED_SCHEMA = {
         ("roas", "float", "ROAS (x)"),
         ("reach", "int", "Elérés"),
         ("frequency", "float", "Gyakoriság"),
-        ("ad_group_name", "string", "Ad Set / Ad Group neve"),
-        ("budget_type", "string", "Költségkeret típusa"),
-        ("budget_allocated", "float", "Költségkeret (HUF)"),
+        ("add_to_cart", "int", "Kosárba helyezések"),
+        ("cost_per_addtocart", "float", "Kosárba helyezés egységnyi költsége (HUF)"),
+        ("results", "int", "Eredmények (FB results oszlop)"),
+        ("adset_budget", "float", "Hirdetéssorozat költségkerete (HUF)"),
+        ("adset_budget_type", "string", "Hirdetéssorozat költségkeretének típusa"),
     ],
     "optional": [
-        ("add_to_cart", "int", "Kosárba helyezések"),
         ("video_views", "int", "Videó megtekintések"),
         ("engagement", "int", "Engagement"),
         ("notes", "string", "Megjegyzések"),
     ],
 }
 
+# Excel: CSV Oszlop → Unified Field + javasolt paraméterek[file:39]
 COLUMN_PATTERNS = {
-    "spend": ["elköltött összeg", "költség", "spend", "amount spent"],
-    "campaign_name": ["kampány neve", "campaign", "campaign name"],
-    "campaign_status": ["kampány teljesítése", "állapot", "status", "state", "active", "completed"],
-    "date_start": ["jelentés kezdete", "start date", "from"],
-    "date_end": ["jelentés vége", "end date", "to"],
-    # konverzió darab: FB „Vásárlások”, GA „Konverziók”
-    "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
+    # 0  | CPC (összes) (HUF)                     | cpc                     |
+    "cpc": ["cpc (összes)", "cpc (összes) (huf)", "cpc", "cost per click"],
+
+    # 1  | CTR (átkattintási arány)              | clicks | ctr            |
+    # Itt a unified field valójában CTR → ctr_percent, a belső paraméter a "ctr"
+    "ctr_percent": ["ctr (átkattintási arány)", "ctr", "átkattintási arány"],
+
+    # 2  | Elköltött összeg (HUF)                | spend   | all_spend      |
+    "spend": ["elköltött összeg (huf)", "elköltött összeg", "spend", "amount spent"],
+
+    # 3  | Elérés                                | reach                   |
+    "reach": ["elérés", "reach"],
+
+    # 4  | Eredmény jelzése                      | conv_cost | (nem kell)   |
+    # Nem használjuk normalizáláshoz, ezért nem adunk neki unified fieldet.
+
+    # 5  | Eredmények                            | conv_cost | results      |
+    # Itt a unified field "results" (darabszám), a paraméter "results".
+    "results": ["eredmények", "results"],
+
+    # 6  | Eredményenkénti költség               | spend    | cost_per_result
+    # Valójában konverziós költség → conv_cost.
+    "conv_cost": ["eredményenkénti költség", "cost per result"],
+
+    # 7  | Gyakoriság                            | frequency              |
+    "frequency": ["gyakoriság", "frequency"],
+
+    # 8  | Hirdetéssorozat költségkerete         | spend    | adset_cost   |
+    "adset_budget": ["hirdetéssorozat költségkerete", "adset budget"],
+
+    # 9  | Hirdetéssorozat költségkeretének típusa | spend |               |
+    "adset_budget_type": ["hirdetéssorozat költségkeretének típusa", "budget type"],
+
+    # 10 | Jelentés kezdete                      | date_start             |
+    "date_start": ["jelentés kezdete", "report start", "start date"],
+
+    # 11 | Jelentés vége                         | date_end               |
+    # 21 | Vége                                  | date_end               |
+    "date_end": ["jelentés vége", "vége", "report end", "end date"],
+
+    # 12 | Kampány neve                          | campaign_name          |
+    "campaign_name": ["kampány neve", "campaign name", "campaign"],
+
+    # 13 | Kampány teljesítése                   | campaign_status        |
+    "campaign_status": ["kampány teljesítése", "status", "állapot"],
+
+    # 14 | Kosárba helyezés egységnyi költsége (HUF) | spend | cost_per_addtocart
+    "cost_per_addtocart": [
+        "kosárba helyezés egységnyi költsége",
+        "kosárba helyezés egységnyi költsége (huf)",
+        "cost per add to cart",
+    ],
+
+    # 15 | Kosárba helyezések                    | add_to_cart           |
+    "add_to_cart": ["kosárba helyezések", "add to cart"],
+
+    # 16 | Kosárba helyezések konverziós értéke  | conversion_value | addtocart_value
+    # Ez is konverziós érték, de add_to_cart típushoz; alap unified field: conversion_value.
     "conversion_value": [
+        "kosárba helyezések konverziós értéke",
         "vásárlások konverziós értéke",
-        "konverziós érték",
         "purchase value",
         "conversion value",
-        "revenue",
         "bevétel",
     ],
+
+    # 17 | Megjelenések                          | impressions           |
     "impressions": ["megjelenések", "impressions"],
-    # kattintások: FB „Link click”/„Clicks”, GA „Interakciók”
-    "clicks": ["link click", "clicks", "kattintás", "interakciók", "interakció"],
-    "ctr_percent": ["ctr", "átkattintási arány"],
-    "cpc": ["cpc", "cost per click", "kattintási költség", "cpc (összes)"],
-    "conv_cost": ["eredményenkénti költség", "cost per result", "cost/result"],
-    "cpa": ["cpa", "költség/konv", "cost per conversion"],
+
+    # 18 | Vásárlási hirdetésmegtérülés (ROAS)   | roas                  |
     "roas": ["vásárlási hirdetésmegtérülés", "roas", "hirdetésmegtérülés"],
-    "reach": ["elérés", "reach"],
-    "frequency": ["gyakoriság", "frequency"],
-    "add_to_cart": ["kosárba helyezések", "add to cart"],
+
+    # 19 | Vásárlások                            | conversions | purchase  |
+    "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
+
+    # 20 | Vásárlások konverziós értéke          | conversions | purchase_value
+    # Itt az Excelben unified field hibás volt; itt is conversion_value‑nak feleltetjük meg.
+    # (Már bent van a conversion_value listában.)
+    # 21 | Vége                                  | date_end              |
+    # -> date_end listában már szerepel.
 }
 
 # ============================================================================
@@ -446,7 +502,6 @@ with tab3:
                 if "roas" in df.columns:
                     st.metric("📈 Átlag ROAS (x)", f"{df['roas'].mean():.2f}")
 
-            # --- FORMÁZOTT TÁBLA ---
             st.subheader("Adatok Táblázat")
             df_display = df.copy()
 
@@ -465,8 +520,7 @@ with tab3:
                     return ""
                 return f"{x:.2f}".replace(".", ",") + "%"
 
-            # conversions, impressions, clicks, reach, add_to_cart, frequency -> egész
-            for col in ["conversions", "impressions", "clicks", "add_to_cart", "reach"]:
+            for col in ["conversions", "impressions", "clicks", "add_to_cart", "reach", "results"]:
                 if col in df_display.columns:
                     df_display[col] = df_display[col].apply(fmt_int)
 
@@ -475,20 +529,20 @@ with tab3:
                     lambda x: "" if pd.isna(x) else f"{x:.4f}"
                 )
 
-            # HUF mezők
             huf_cols = {
                 "spend": "spend (HUF)",
                 "conversion_value": "conversion_value (HUF)",
                 "cpc": "cpc (HUF)",
                 "cpa": "cpa (HUF, számított)",
                 "conv_cost": "conv_cost (HUF)",
+                "cost_per_addtocart": "cost_per_addtocart (HUF)",
+                "adset_budget": "adset_budget (HUF)",
             }
             for src, dst in huf_cols.items():
                 if src in df_display.columns:
                     df_display[dst] = df_display[src].apply(fmt_huf)
                     del df_display[src]
 
-            # CTR (%)
             if "ctr_percent" in df_display.columns:
                 df_display["ctr_percent (%)"] = df_display["ctr_percent"].apply(fmt_ctr)
                 del df_display["ctr_percent"]
@@ -532,7 +586,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.6** | Neuromarketing ROAS Predictor  
+**HYPER App v3.7** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
