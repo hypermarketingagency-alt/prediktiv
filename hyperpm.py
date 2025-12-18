@@ -12,15 +12,15 @@ except ImportError:
 import io
 
 # ============================================================================
-# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.1
-# FÁZIS 1: CSV Importer & Intelligent Mapper (Facebook-ra optimalizálva)
+# 🎨 HYPER App - Neuromarketing ROAS Predictor v3.2
+# FÁZIS 1: CSV Importer & Intelligent Mapper
 # ============================================================================
 
 st.set_page_config(
     page_title="HYPER - Marketing Predictor",
     page_icon="🎯",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # ============================================================================
@@ -44,7 +44,7 @@ UNIFIED_SCHEMA = {
         ("ctr_percent", "float", "CTR (%)"),
         ("cpc", "float", "CPC (HUF)"),
         ("cpa", "float", "CPA (HUF)"),
-        ("roas", "float", "ROAS"),
+        ("roas", "float", "ROAS (x)"),
         ("reach", "int", "Elérés"),
         ("frequency", "float", "Gyakoriság"),
         ("ad_group_name", "string", "Ad Set / Ad Group neve"),
@@ -57,64 +57,34 @@ UNIFIED_SCHEMA = {
         ("engagement", "int", "Engagement"),
         ("conversion_type", "string", "Konverzió típusa"),
         ("notes", "string", "Megjegyzések"),
-    ]
+    ],
 }
 
-# Fuzzy matching patterns – kampány név és státusz szétválasztva
+# Fuzzy minták – kampány név és státusz szétválasztva
 COLUMN_PATTERNS = {
-    # Spend
     "spend": ["elköltött összeg", "költség", "spend", "amount spent"],
-
-    # Kampány NÉV
     "campaign_name": ["kampány neve", "campaign", "campaign name"],
-
-    # Kampány STÁTUSZ
     "campaign_status": ["kampány teljesítése", "állapot", "status", "state", "active", "completed"],
-
-    # Dátumok
     "date_start": ["jelentés kezdete", "start date", "from"],
     "date_end": ["jelentés vége", "end date", "to"],
-
-    # Konverziók
     "conversions": ["vásárlások", "konverziók", "purchases", "orders"],
     "conversion_value": [
         "vásárlások konverziós értéke",
-        "kosárba helyezések konverziós értéke",
         "konverziós érték",
         "purchase value",
         "conversion value",
         "revenue",
-        "bevétel"
+        "bevétel",
     ],
-
-    # Impressions
     "impressions": ["megjelenések", "impressions"],
-
-    # Clicks
     "clicks": ["kattintás", "clicks", "link click", "interakció"],
-
-    # CTR
     "ctr_percent": ["ctr", "átkattintási arány"],
-
-    # CPC
     "cpc": ["cpc", "cost per click", "kattintási költség", "cpc (összes)"],
-
-    # CPA
     "cpa": ["eredményenkénti költség", "cpa", "költség/konv", "cost per conversion"],
-
-    # ROAS
     "roas": ["vásárlási hirdetésmegtérülés", "roas", "hirdetésmegtérülés"],
-
-    # Reach
     "reach": ["elérés", "reach"],
-
-    # Frequency
     "frequency": ["gyakoriság", "frequency"],
-
-    # Add to cart
     "add_to_cart": ["kosárba helyezések", "add to cart"],
-
-    # Platform – ezt inkább később állítjuk be kézzel
 }
 
 # ============================================================================
@@ -125,14 +95,12 @@ def find_matching_column(csv_column, patterns_dict, threshold=70):
     csv_col_lower = csv_column.lower().strip()
     best_match = None
     best_score = 0
-
     for unified_field, patterns in patterns_dict.items():
         for pattern in patterns:
             score = fuzz.partial_ratio(csv_col_lower, pattern.lower())
             if score > best_score:
                 best_score = score
                 best_match = unified_field
-
     if best_score >= threshold:
         return best_match, best_score
     return None, best_score
@@ -141,26 +109,48 @@ def find_matching_column(csv_column, patterns_dict, threshold=70):
 def intelligently_map_columns(df_columns):
     mapping = {}
     unmapped = []
-
     for col in df_columns:
         matched_field, score = find_matching_column(col, COLUMN_PATTERNS)
         if matched_field:
             mapping[col] = matched_field
         else:
             unmapped.append(col)
-
     return mapping, unmapped
 
 
 def parse_numeric_value(val):
+    """Magyar formátum: szóköz ezres, vessző tizedes, esetleg pont is."""
     if pd.isna(val) or val == "" or val == "–" or val == "--":
         return np.nan
     if isinstance(val, (int, float)):
         return float(val)
-    val_str = str(val).strip()
-    val_str = val_str.replace(" ", "").replace(",", ".")
+    s = str(val).strip()
+    # Ezres elválasztókat töröljük (szóköz és non‑breaking space)
+    s = s.replace("\u00a0", "").replace(" ", "")
+    # Ha van mind pont, mind vessző: tipikusan 1.234,56 → 1234.56
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    else:
+        # Ha csak vessző van, az tizedes
+        s = s.replace(",", ".")
     try:
-        return float(val_str)
+        return float(s)
+    except Exception:
+        return np.nan
+
+
+def parse_percentage_value(val):
+    """Százalék → float %-ban (pl. 5.25), nem 0.0525."""
+    if pd.isna(val) or val == "" or val == "–":
+        return np.nan
+    s = str(val).strip().replace("%", "")
+    s = s.replace("\u00a0", "").replace(" ", "")
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".")
+    else:
+        s = s.replace(",", ".")
+    try:
+        return float(s)
     except Exception:
         return np.nan
 
@@ -197,11 +187,7 @@ def normalize_data(df, mapping, user_adjustments=None, platform_hint=None):
             continue
 
         field_info = None
-        for section in [
-            UNIFIED_SCHEMA["mandatory"],
-            UNIFIED_SCHEMA["recommended"],
-            UNIFIED_SCHEMA["optional"],
-        ]:
+        for section in [UNIFIED_SCHEMA["mandatory"], UNIFIED_SCHEMA["recommended"], UNIFIED_SCHEMA["optional"]]:
             for field in section:
                 if field[0] == unified_col:
                     field_info = field
@@ -213,7 +199,9 @@ def normalize_data(df, mapping, user_adjustments=None, platform_hint=None):
         field_name, field_type, _ = field_info
         raw_data = df[csv_col]
 
-        if field_type == "float":
+        if field_name == "ctr_percent":
+            normalized_df[field_name] = raw_data.apply(parse_percentage_value)
+        elif field_type == "float":
             normalized_df[field_name] = raw_data.apply(parse_numeric_value)
         elif field_type == "int":
             normalized_df[field_name] = raw_data.apply(
@@ -232,31 +220,20 @@ def normalize_data(df, mapping, user_adjustments=None, platform_hint=None):
     if "date_start" in normalized_df.columns and "date_end" not in normalized_df.columns:
         normalized_df["date_end"] = normalized_df["date_start"]
 
-    # Platform automata beállítás (pl. Facebook)
+    # Platform automatikus beállítás
     if "platform" not in normalized_df.columns:
-        if platform_hint:
-            normalized_df["platform"] = platform_hint
-        else:
-            normalized_df["platform"] = "Unknown"
+        normalized_df["platform"] = platform_hint if platform_hint else "Unknown"
 
     # Számolt metrikák
     if "spend" in normalized_df.columns and "conversion_value" in normalized_df.columns:
         if "roas" not in normalized_df.columns:
-            normalized_df["roas"] = (
-                normalized_df["conversion_value"] / normalized_df["spend"]
-            )
-            normalized_df["roas"] = normalized_df["roas"].replace(
-                [np.inf, -np.inf], np.nan
-            )
+            normalized_df["roas"] = normalized_df["conversion_value"] / normalized_df["spend"]
+            normalized_df["roas"] = normalized_df["roas"].replace([np.inf, -np.inf], np.nan)
 
     if "spend" in normalized_df.columns and "conversions" in normalized_df.columns:
         if "cpa" not in normalized_df.columns:
-            normalized_df["cpa"] = (
-                normalized_df["spend"] / normalized_df["conversions"]
-            )
-            normalized_df["cpa"] = normalized_df["cpa"].replace(
-                [np.inf, -np.inf], np.nan
-            )
+            normalized_df["cpa"] = normalized_df["spend"] / normalized_df["conversions"]
+            normalized_df["cpa"] = normalized_df["cpa"].replace([np.inf, -np.inf], np.nan)
 
     if "clicks" in normalized_df.columns and "impressions" in normalized_df.columns:
         if "ctr_percent" not in normalized_df.columns:
@@ -270,9 +247,7 @@ def normalize_data(df, mapping, user_adjustments=None, platform_hint=None):
     if "spend" in normalized_df.columns and "clicks" in normalized_df.columns:
         if "cpc" not in normalized_df.columns:
             normalized_df["cpc"] = normalized_df["spend"] / normalized_df["clicks"]
-            normalized_df["cpc"] = normalized_df["cpc"].replace(
-                [np.inf, -np.inf], np.nan
-            )
+            normalized_df["cpc"] = normalized_df["cpc"].replace([np.inf, -np.inf], np.nan)
 
     return normalized_df
 
@@ -284,9 +259,7 @@ def validate_data(df):
         if field not in df.columns:
             issues.append(f"❌ Hiányzik: {field}")
         elif df[field].isna().sum() > len(df) * 0.5:
-            issues.append(
-                f"⚠️ Túl sok hiányzik: {field} ({df[field].isna().sum()} / {len(df)})"
-            )
+            issues.append(f"⚠️ Túl sok hiányzik: {field} ({df[field].isna().sum()} / {len(df)})")
 
     if "roas" in df.columns:
         invalid_roas = df[(df["roas"] < 0) | (df["roas"] > 100)].shape[0]
@@ -299,6 +272,7 @@ def validate_data(df):
             issues.append(f"⚠️ Negatív CPA értékek: {invalid_cpa}")
 
     return issues
+
 
 # ============================================================================
 # 🎨 STREAMLIT UI
@@ -362,7 +336,6 @@ with tab1:
             st.info(f"📊 Sorok: {len(raw_df)}, Oszlopok: {len(raw_df.columns)}")
 
             st.subheader("2️⃣ Automata Oszlop Felismerés")
-
             initial_mapping, unmapped = intelligently_map_columns(raw_df.columns)
             st.session_state.mapping = initial_mapping
 
@@ -374,25 +347,19 @@ with tab1:
                     for csv_col, unified_col in sorted(initial_mapping.items())
                 ]
                 if mapping_display:
-                    st.dataframe(
-                        pd.DataFrame(mapping_display), use_container_width=True
-                    )
+                    st.dataframe(pd.DataFrame(mapping_display), use_container_width=True)
                 else:
                     st.warning("Nincs automata felismerés :(")
 
             if unmapped:
-                unmapped_cols = st.expander(
-                    f"⚠️ Felismeretlen oszlopok ({len(unmapped)})"
-                )
+                unmapped_cols = st.expander(f"⚠️ Felismeretlen oszlopok ({len(unmapped)})")
                 with unmapped_cols:
                     st.warning("A következő oszlopok nem kerültek besorolásra:")
                     for col in unmapped:
                         st.text(f"• {col}")
 
             st.subheader("3️⃣ Manuális Korrekció (opcionális)")
-            st.markdown(
-                "Ha valamelyik mező rossz helyre került (pl. kampány név vs. státusz), itt tudod javítani."
-            )
+            st.markdown("Ha valamelyik mező rossz helyre került, itt tudod javítani.")
 
             manual_corrections = {}
             all_fields = ["--Nincs--"]
@@ -408,7 +375,7 @@ with tab1:
                 for csv_col in raw_df.columns:
                     current_mapping = initial_mapping.get(csv_col, "--Nincs--")
                     new_mapping = st.selectbox(
-                        f"{csv_col}",
+                        csv_col,
                         all_fields,
                         index=all_fields.index(current_mapping)
                         if current_mapping in all_fields
@@ -474,19 +441,36 @@ with tab3:
             col1, col2, col3 = st.columns(3)
             with col1:
                 if "spend" in df.columns:
-                    st.metric("💰 Teljes Költség", f"{df['spend'].sum():,.0f} HUF")
+                    st.metric("💰 Teljes Költség (HUF)", f"{df['spend'].sum():,.0f}")
             with col2:
                 if "conversion_value" in df.columns:
                     st.metric(
-                        "💵 Konverziós Érték",
-                        f"{df['conversion_value'].sum():,.0f} HUF",
+                        "💵 Konverziós Érték (HUF)",
+                        f"{df['conversion_value'].sum():,.0f}",
                     )
             with col3:
                 if "roas" in df.columns:
-                    st.metric("📈 Átlag ROAS", f"{df['roas'].mean():.2f}")
+                    st.metric("📈 Átlag ROAS (x)", f"{df['roas'].mean():.2f}")
 
             st.subheader("Adatok Táblázat")
-            st.dataframe(df, use_container_width=True)
+            df_display = df.copy()
+            if "cpc" in df_display.columns:
+                df_display.rename(columns={"cpc": "cpc (HUF)"}, inplace=True)
+            if "cpa" in df_display.columns:
+                df_display.rename(columns={"cpa": "cpa (HUF)"}, inplace=True)
+            if "spend" in df_display.columns:
+                df_display.rename(columns={"spend": "spend (HUF)"}, inplace=True)
+            if "conversion_value" in df_display.columns:
+                df_display.rename(
+                    columns={"conversion_value": "conversion_value (HUF)"},
+                    inplace=True,
+                )
+            if "ctr_percent" in df_display.columns:
+                df_display.rename(
+                    columns={"ctr_percent": "ctr_percent (%)"}, inplace=True
+                )
+
+            st.dataframe(df_display, use_container_width=True)
         except Exception as e:
             st.error(f"❌ Hiba az előnézet során: {str(e)}")
     else:
@@ -525,7 +509,7 @@ with tab4:
 st.divider()
 st.markdown(
     """
-**HYPER App v3.1** | Neuromarketing ROAS Predictor  
+**HYPER App v3.2** | Neuromarketing ROAS Predictor  
 Fázis 1 kész – jöhet a Fázis 2 (Creative Analyzer + ML modell).
 """
 )
